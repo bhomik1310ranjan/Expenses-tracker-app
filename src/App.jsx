@@ -2,6 +2,7 @@ import { useState } from "react";
 import { UNCATEGORIZED_BUDGET_ID, BudgetProvider } from "./contexts";
 import useLocalStorage from "./hooks";
 import components from "./components";
+import toast, { Toaster } from "react-hot-toast";
 
 function App() {
     const [budgets, setBudgets] = useLocalStorage("budgets", []);
@@ -27,24 +28,35 @@ function App() {
     };
 
     const addBudget = (budgetName, maxAmount) => {
-        setBudgets((previousBudgets) => {
-            if (
-                previousBudgets.find(
-                    (budget) => budget.budgetName === budgetName
-                )
-            ) {
-                return previousBudgets;
-            }
+        toast.promise(
+            new Promise((resolve, reject) => {
+                setBudgets((previousBudgets) => {
+                    if (
+                        previousBudgets.find(
+                            (budget) => budget.budgetName === budgetName
+                        )
+                    ) {
+                        reject(previousBudgets);
+                        return previousBudgets;
+                    }
 
-            return [
-                ...previousBudgets,
-                {
-                    budgetId: Date.now().toString(),
-                    budgetName: budgetName,
-                    maxAmount: maxAmount,
-                },
-            ];
-        });
+                    const newBudget = {
+                        budgetId: Date.now().toString(),
+                        budgetName: budgetName,
+                        maxAmount: maxAmount,
+                    };
+
+                    resolve([...previousBudgets, newBudget]);
+
+                    return [...previousBudgets, newBudget];
+                });
+            }),
+            {
+                loading: "Adding...",
+                success: "Budget added successfully!",
+                error: "Budget already exists!",
+            }
+        );
     };
 
     const addExpense = (budgetId, description, amount) => {
@@ -57,6 +69,7 @@ function App() {
                 amount: amount,
             },
         ]);
+        toast.success("Expense added successfully!");
     };
 
     const getBudgetExpenses = (budgetId) => {
@@ -77,6 +90,8 @@ function App() {
         setBudgets((previousBudgets) =>
             previousBudgets.filter((budget) => budget.budgetId !== budgetId)
         );
+
+        toast.success("Budget deleted successfully!");
     };
 
     const deleteExpense = (expenseId) => {
@@ -85,6 +100,8 @@ function App() {
                 (expense) => expense.expenseId !== expenseId
             )
         );
+
+        toast.success("Expense deleted successfully!");
     };
 
     return (
@@ -163,6 +180,7 @@ function App() {
                     budgetId={viewExpenseModalBudgetId}
                     closeHandler={() => setShowViewExpenseModal(false)}
                 />
+                <Toaster />
             </div>
         </BudgetProvider>
     );
