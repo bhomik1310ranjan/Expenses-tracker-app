@@ -4,13 +4,23 @@ import { MdDeleteOutline } from "react-icons/md";
 import { RxCross1 } from "react-icons/rx";
 
 function ViewExpensesModal({ show, budgetId, closeHandler }) {
-    const { budgets, getBudgetExpenses, deleteBudget, deleteExpense } =
-        useBudget();
+    const {
+        budgets,
+        expenses,
+        getBudgetExpenses,
+        deleteBudget,
+        deleteExpense,
+    } = useBudget();
 
     const budget =
         budgetId === UNCATEGORIZED_BUDGET_ID
             ? { budgetName: "Uncategorized", budgetId: UNCATEGORIZED_BUDGET_ID }
             : budgets.find((budget) => budget.budgetId === budgetId);
+
+    if (budgets.length === 0 && expenses.length === 0) {
+        closeHandler();
+        return null;
+    }
 
     return (
         <>
